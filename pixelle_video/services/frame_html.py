@@ -327,14 +327,21 @@ class HTMLFrameGenerator:
             cls._playwright = None
             from playwright.async_api import async_playwright
             cls._playwright = await async_playwright().start()
-            cls._browser = await cls._playwright.chromium.launch(
-                args=[
+            launch_args = {
+                'args': [
                     '--no-sandbox',
                     '--disable-dev-shm-usage',
                     '--disable-gpu',
                     '--disable-extensions',
                 ]
-            )
+            }
+            
+            chrome_path = os.environ.get('PLAYWRIGHT_CHROMIUM_PATH')
+            if chrome_path and os.path.isfile(chrome_path):
+                launch_args['executable_path'] = chrome_path
+                logger.debug(f"Using custom Chrome: {chrome_path}")
+            
+            cls._browser = await cls._playwright.chromium.launch(**launch_args)
             cls._browser_loop = current_loop
             logger.debug("Initialized Playwright Chromium browser")
         return cls._browser
