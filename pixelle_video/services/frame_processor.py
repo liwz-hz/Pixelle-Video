@@ -169,11 +169,19 @@ class FrameProcessor:
         }
         
         if config.tts_inference_mode == "local":
-            # Local mode: pass voice and speed
             if config.voice_id:
                 tts_params["voice"] = config.voice_id
             if config.tts_speed is not None:
                 tts_params["speed"] = config.tts_speed
+        elif config.tts_inference_mode == "qwen_tts":
+            if config.voice_id:
+                tts_params["voice"] = config.voice_id
+            if config.tts_speed is not None:
+                tts_params["speed"] = config.tts_speed
+            if getattr(config, "instruct", None):
+                tts_params["instruct"] = config.instruct
+            if getattr(config, "temperature", None) is not None:
+                tts_params["temperature"] = config.temperature
         else:  # comfyui
             # ComfyUI mode: pass workflow, voice, speed, and ref_audio
             if config.tts_workflow:

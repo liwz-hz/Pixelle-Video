@@ -46,10 +46,11 @@ def render_style_config(pixelle_video):
         # Inference mode selection
         tts_mode = st.radio(
             tr("tts.inference_mode"),
-            ["local", "comfyui"],
+            ["local", "qwen_tts", "comfyui"],
             horizontal=True,
             format_func=lambda x: tr(f"tts.mode.{x}"),
-            index=0 if tts_config.get("inference_mode", "local") == "local" else 1,
+            index=0 if tts_config.get("inference_mode", "local") == "local" else
+                  (1 if tts_config.get("inference_mode", "local") == "qwen_tts" else 2),
             key="tts_inference_mode"
         )
         
@@ -116,6 +117,71 @@ def render_style_config(pixelle_video):
                 st.caption(tr("tts.speed_label", speed=f"{tts_speed:.1f}"))
             
             # Variables for video generation
+            tts_workflow_key = None
+            ref_audio_path = None
+        
+        # ================================================================
+        # Qwen-TTS Mode UI
+        # ================================================================
+        elif tts_mode == "qwen_tts":
+            st.caption(tr("tts.mode.qwen_tts_hint"))
+            
+            from pixelle_video.tts_voices import QWEN_TTS_SPEAKERS
+            
+            qwen_config = tts_config.get("qwen_tts", {})
+            saved_speaker = qwen_config.get("speaker", "vivian")
+            
+            speaker_options = [s["label"] for s in QWEN_TTS_SPEAKERS]
+            speaker_ids = [s["id"] for s in QWEN_TTS_SPEAKERS]
+            default_speaker_index = speaker_ids.index(saved_speaker) if saved_speaker in speaker_ids else 0
+            
+            saved_speed = qwen_config.get("speed", 1.0)
+            saved_instruct = qwen_config.get("instruct", "")
+            saved_temp = qwen_config.get("temperature", 0.9)
+            
+            speaker_col, speed_col = st.columns([1, 1])
+            
+            with speaker_col:
+                qwen_speaker_display = st.selectbox(
+                    tr("tts.speaker_selector"),
+                    speaker_options,
+                    index=default_speaker_index,
+                    key="qwen_tts_speaker"
+                )
+            
+            with speed_col:
+                qwen_speed = st.slider(
+                    tr("tts.speed"),
+                    min_value=0.5,
+                    max_value=2.0,
+                    value=saved_speed,
+                    step=0.1,
+                    format="%.1fx",
+                    key="qwen_tts_speed"
+                )
+                st.caption(tr("tts.speed_label", speed=f"{qwen_speed:.1f}"))
+            
+            qwen_temp = st.slider(
+                "温度（Temperature）",
+                min_value=0.5,
+                max_value=1.5,
+                value=saved_temp,
+                step=0.05,
+                format="%.2f",
+                key="qwen_tts_temperature",
+                help="控制语音的自然度和变化性。越低越稳定一致，越高越有变化。"
+            )
+            
+            qwen_instruct = st.text_input(
+                "情绪指令（可选）",
+                value=saved_instruct,
+                key="qwen_tts_instruct",
+                placeholder="例：平静地讲述、充满激情地说、低沉沙哑",
+                help="用自然语言描述说话的情绪和风格，改变语音的表现力。"
+            )
+            
+            selected_speaker = speaker_ids[speaker_options.index(qwen_speaker_display)]
+            
             tts_workflow_key = None
             ref_audio_path = None
         
@@ -204,6 +270,12 @@ def render_style_config(pixelle_video):
                         if tts_mode == "local":
                             tts_params["voice"] = selected_voice
                             tts_params["speed"] = tts_speed
+                        elif tts_mode == "qwen_tts":
+                            tts_params["voice"] = selected_speaker
+                            tts_params["speed"] = qwen_speed
+                            if qwen_instruct:
+                                tts_params["instruct"] = qwen_instruct
+                            tts_params["temperature"] = qwen_temp
                         else:  # comfyui
                             tts_params["workflow"] = tts_workflow_key
                             if ref_audio_path:
@@ -864,7 +936,8 @@ def render_style_config(pixelle_video):
     # Return all style configuration parameters
     return {
         "tts_inference_mode": tts_mode,
-        "tts_voice": selected_voice if tts_mode == "local" else None,
+        "tts_voice": selected_voice if tts_mode == "local" else
+                     (selected_speaker if tts_mode == "qwen_tts" else None),
         "tts_speed": tts_speed if tts_mode == "local" else None,
         "tts_workflow": tts_workflow_key if tts_mode == "comfyui" else None,
         "ref_audio": str(ref_audio_path) if ref_audio_path else None,

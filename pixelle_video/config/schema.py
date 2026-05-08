@@ -34,6 +34,19 @@ class AliyunConfig(BaseModel):
     max_wait_attempts: int = Field(default=60, ge=10, le=120, description="最大等待轮询次数")
 
 
+class QwenTTSConfig(BaseModel):
+    """Qwen-TTS MLX configuration"""
+    conda_env: str = Field(default="audio", description="Conda environment name with mlx-audio")
+    speaker: str = Field(default="vivian", description="Default speaker voice")
+    language: str = Field(default="Chinese", description="Default language")
+    instruct: str = Field(default="", description="Default style/emotion instruction (empty = no instruction)")
+    quant: str = Field(default="bf16", description="Model quantization variant")
+    speed: float = Field(default=1.0, ge=0.5, le=2.0, description="Speech speed multiplier")
+    temperature: float = Field(default=0.9, ge=0.5, le=1.5, description="Sampling temperature for generation")
+
+
+
+
 class TTSLocalConfig(BaseModel):
     """Local TTS configuration (Edge TTS)"""
     voice: str = Field(default="zh-CN-YunjianNeural", description="Edge TTS voice ID")
@@ -47,9 +60,10 @@ class TTSComfyUIConfig(BaseModel):
 
 class TTSSubConfig(BaseModel):
     """TTS-specific configuration (under comfyui.tts)"""
-    inference_mode: str = Field(default="local", description="TTS inference mode: 'local' or 'comfyui'")
+    inference_mode: str = Field(default="local", description="TTS inference mode: 'local', 'qwen_tts', or 'comfyui'")
     local: TTSLocalConfig = Field(default_factory=TTSLocalConfig, description="Local TTS (Edge TTS) configuration")
     comfyui: TTSComfyUIConfig = Field(default_factory=TTSComfyUIConfig, description="ComfyUI TTS configuration")
+    qwen_tts: QwenTTSConfig = Field(default_factory=QwenTTSConfig, description="Qwen-TTS MLX configuration")
     
     # Backward compatibility: keep default_workflow at top level
     @property

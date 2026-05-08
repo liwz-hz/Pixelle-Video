@@ -19,6 +19,19 @@ Defines available voices for local Edge TTS inference.
 from typing import List, Dict, Any
 
 
+QWEN_TTS_SPEAKERS: List[Dict[str, Any]] = [
+    {"id": "vivian", "label": "Vivian", "gender": "female"},
+    {"id": "serena", "label": "Serena", "gender": "female"},
+    {"id": "sohee", "label": "Sohee", "gender": "female"},
+    {"id": "ono_anna", "label": "Ono Anna", "gender": "female"},
+    {"id": "ryan", "label": "Ryan", "gender": "male"},
+    {"id": "aiden", "label": "Aiden", "gender": "male"},
+    {"id": "eric", "label": "Eric", "gender": "male"},
+    {"id": "dylan", "label": "Dylan", "gender": "male"},
+    {"id": "uncle_fu", "label": "Uncle Fu", "gender": "male"},
+]
+
+
 # Edge TTS voice presets for local inference
 EDGE_TTS_VOICES: List[Dict[str, Any]] = [
     # Chinese voices

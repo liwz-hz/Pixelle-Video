@@ -28,7 +28,19 @@ comfyui:
   
   # TTS-specific configuration
   tts:
-    default_workflow: selfhost/tts_edge.json  # TTS workflow to use
+    inference_mode: local  # 'local' (Edge TTS), 'qwen_tts' (local MLX), or 'comfyui'
+    default_workflow: selfhost/tts_edge.json  # TTS workflow to use (for comfyui mode)
+    local:
+      voice: zh-CN-YunjianNeural  # Edge TTS voice
+      speed: 1.2  # Speed multiplier
+    qwen_tts:
+      conda_env: audio  # Conda environment with mlx-audio
+      speaker: vivian  # Default speaker
+      language: Chinese  # Default language
+      speed: 1.0  # Speech speed multiplier (0.5-2.0)
+      temperature: 0.9  # Temperature (0.5-1.5), lower=more stable, higher=more varied
+      instruct: ""  # Style/emotion instruction (e.g., "平静地讲述", "充满激情")
+      quant: bf16  # Model quantization: bf16, 8bit, 6bit, 4bit
   
   # Image-specific configuration
   image:

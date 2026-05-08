@@ -11,10 +11,14 @@
 # limitations under the License.
 
 """
-TTS (Text-to-Speech) Service - Supports both local and ComfyUI inference
+TTS (Text-to-Speech) Service - Supports local Edge TTS, Qwen-TTS MLX, and ComfyUI inference
 """
 
+import asyncio
+import json
 import os
+import shutil
+import subprocess
 import uuid
 from pathlib import Path
 from typing import Optional
@@ -23,8 +27,10 @@ from comfykit import ComfyKit
 from loguru import logger
 
 from pixelle_video.services.comfy_base_service import ComfyBaseService
+from pixelle_video.tts_voices import QWEN_TTS_SPEAKERS, speed_to_rate
 from pixelle_video.utils.tts_util import edge_tts
-from pixelle_video.tts_voices import speed_to_rate
+
+QWEN_TTS_VALID_SPEAKERS = [s["id"] for s in QWEN_TTS_SPEAKERS]
 
 
 class TTSService(ComfyBaseService):
@@ -114,13 +120,20 @@ class TTSService(ComfyBaseService):
         # Determine inference mode (param > config)
         mode = inference_mode or self.config.get("inference_mode", "local")
         
-        # Route to appropriate implementation
         if mode == "local":
             return await self._call_local_tts(
                 text=text,
                 voice=voice,
                 speed=speed,
                 output_path=output_path
+            )
+        elif mode == "qwen_tts":
+            return await self._call_qwen_tts(
+                text=text,
+                voice=voice,
+                speed=speed,
+                output_path=output_path,
+                **params
             )
         else:  # comfyui
             # 1. Resolve workflow (returns structured info)
@@ -193,7 +206,101 @@ class TTSService(ComfyBaseService):
         except Exception as e:
             logger.error(f"Local TTS generation error: {e}")
             raise
-    
+
+    async def _call_qwen_tts(
+        self,
+        text: str,
+        voice: Optional[str] = None,
+        speed: Optional[float] = None,
+        output_path: Optional[str] = None,
+        temperature: Optional[float] = None,
+        instruct: Optional[str] = None,
+        **params
+    ) -> str:
+        qwen_config = self.config.get("qwen_tts", {})
+        
+        conda_env = qwen_config.get("conda_env", "audio")
+        speaker = voice or qwen_config.get("speaker", "vivian")
+        language = qwen_config.get("language", "Chinese")
+        instruct = instruct or qwen_config.get("instruct", "")
+        quant = qwen_config.get("quant", "bf16")
+        final_speed = speed if speed is not None else qwen_config.get("speed", 1.0)
+        final_temp = temperature if temperature is not None else qwen_config.get("temperature", 0.9)
+
+        if speaker not in QWEN_TTS_VALID_SPEAKERS:
+            raise ValueError(f"Invalid speaker '{speaker}', must be one of {QWEN_TTS_VALID_SPEAKERS}")
+
+        if not output_path:
+            unique_id = uuid.uuid4().hex
+            output_path = f"output/{unique_id}.wav"
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+
+        python_bin = self._find_conda_python(conda_env)
+
+        runner_path = str(Path(__file__).parent / "qwen_tts_runner.py")
+        if not os.path.isfile(runner_path):
+            raise FileNotFoundError(f"qwen_tts_runner.py not found at {runner_path}")
+
+        input_data = json.dumps({
+            "text": text,
+            "speaker": speaker,
+            "language": language,
+            "instruct": instruct,
+            "output_path": str(Path(output_path).resolve()),
+            "quant": quant,
+            "speed": final_speed,
+            "temperature": final_temp,
+        })
+
+        logger.info(f"🎙️  Using Qwen-TTS MLX: speaker={speaker}, lang={language}, quant={quant}")
+
+        proc = await asyncio.create_subprocess_exec(
+            python_bin, runner_path,
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await proc.communicate(input=input_data.encode())
+
+        if proc.returncode != 0:
+            error_msg = stderr.decode().strip()
+            logger.error(f"Qwen-TTS generation failed: {error_msg}")
+            raise RuntimeError(f"Qwen-TTS failed: {error_msg}")
+
+        result_path = stdout.decode().strip()
+        if stderr:
+            for line in stderr.decode().strip().split("\n"):
+                logger.debug(f"  [qwen-tts] {line}")
+
+        logger.info(f"✅ Generated audio (Qwen-TTS): {result_path}")
+        return result_path
+
+    @staticmethod
+    def _find_conda_python(conda_env: str) -> str:
+        conda_bin = shutil.which("conda")
+        if not conda_bin:
+            search_paths = [
+                "/opt/homebrew/Caskroom/miniconda/base/bin/conda",
+                os.path.expanduser("~/miniconda3/bin/conda"),
+                os.path.expanduser("~/anaconda3/bin/conda"),
+                "/opt/miniconda3/bin/conda",
+            ]
+            for p in search_paths:
+                if os.path.isfile(p):
+                    conda_bin = p
+                    break
+        if not conda_bin:
+            raise RuntimeError("conda not found, please set PATH or configure qwen_tts.conda_python")
+
+        try:
+            result = subprocess.run(
+                [conda_bin, "run", "-n", conda_env, "which", "python"],
+                capture_output=True, text=True, timeout=10,
+            )
+            return result.stdout.strip()
+        except Exception:
+            return f"{Path(conda_bin).parent.parent}/envs/{conda_env}/bin/python"
+
     async def _call_comfyui_workflow(
         self,
         workflow_info: dict,

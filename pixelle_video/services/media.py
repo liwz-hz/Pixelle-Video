@@ -254,14 +254,14 @@ class MediaService(ComfyBaseService):
                 ratio=ratio,
                 prompt_extend=True
             )
-                
-                logger.info(f"✅ Generated video from Aliyun: {result.url}")
-                
-                return MediaResult(
-                    media_type="video",
-                    url=result.url,
-                    duration=result.duration
-                )
+            
+            logger.info(f"✅ Generated video from Aliyun: {result.url}")
+            
+            return MediaResult(
+                media_type="video",
+                url=result.url,
+                duration=result.duration
+            )
             
             # Standard ComfyKit execution (RunningHub or Selfhost)
             kit = await self.core._get_or_create_comfykit()
