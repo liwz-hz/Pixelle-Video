@@ -26,6 +26,14 @@ class LLMConfig(BaseModel):
     model: str = Field(default="", description="LLM Model Name")
 
 
+class AliyunConfig(BaseModel):
+    """阿里云视频生成配置"""
+    api_key: str = Field(default="", description="阿里云DashScope API Key")
+    model: str = Field(default="wan2.6-t2v", description="视频生成模型")
+    timeout: int = Field(default=600, ge=60, le=1200, description="API超时时间（秒）")
+    max_wait_attempts: int = Field(default=60, ge=10, le=120, description="最大等待轮询次数")
+
+
 class TTSLocalConfig(BaseModel):
     """Local TTS configuration (Edge TTS)"""
     voice: str = Field(default="zh-CN-YunjianNeural", description="Edge TTS voice ID")
@@ -89,9 +97,9 @@ class TemplateConfig(BaseModel):
 
 
 class PixelleVideoConfig(BaseModel):
-    """Pixelle-Video main configuration"""
     project_name: str = Field(default="Pixelle-Video", description="Project name")
     llm: LLMConfig = Field(default_factory=LLMConfig)
+    aliyun: AliyunConfig = Field(default_factory=AliyunConfig)
     comfyui: ComfyUIConfig = Field(default_factory=ComfyUIConfig)
     template: TemplateConfig = Field(default_factory=TemplateConfig)
     
@@ -101,6 +109,11 @@ class PixelleVideoConfig(BaseModel):
             self.llm.api_key and self.llm.api_key.strip() and
             self.llm.base_url and self.llm.base_url.strip() and
             self.llm.model and self.llm.model.strip()
+        )
+    
+    def is_aliyun_configured(self) -> bool:
+        return bool(
+            self.aliyun.api_key and self.aliyun.api_key.strip()
         )
     
     def validate_required(self) -> bool:
