@@ -169,4 +169,22 @@ class ConfigManager:
         
         if updates:
             self.update({"comfyui": updates})
+    
+    def get_aliyun_config(self) -> dict:
+        """Get Aliyun configuration as dict"""
+        return {
+            "api_key": self.config.aliyun.api_key,
+            "model": self.config.aliyun.model,
+            "timeout": self.config.aliyun.timeout,
+            "max_wait_attempts": self.config.aliyun.max_wait_attempts,
+        }
+    
+    def set_aliyun_config(self, api_key: str, model: str):
+        """Set Aliyun configuration"""
+        self.update({
+            "aliyun": {
+                "api_key": api_key,
+                "model": model,
+            }
+        })
 
