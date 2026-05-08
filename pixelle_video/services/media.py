@@ -227,7 +227,43 @@ class MediaService(ComfyBaseService):
         
         # 4. Execute workflow using shared ComfyKit instance from core
         try:
-            # Get shared ComfyKit instance (lazy initialization + config hot-reload)
+            # Special handling for Aliyun source (direct API call)
+            if workflow_info["source"] == "aliyun":
+                aliyun_service = self.core.get_aliyun_video_service()
+                if not aliyun_service:
+                    raise RuntimeError(
+                        "Aliyun video service not configured. "
+                        "Please set aliyun.api_key in config.yaml"
+                    )
+                
+                logger.info(f"Executing Aliyun video workflow: {workflow_info['key']}")
+                
+# Detect ratio from template path
+            template_path = self.core.config.get("template", {}).get("default_template", "")
+            if "1080x1920" in template_path:
+                ratio = "9:16"
+            elif "1920x1080" in template_path:
+                ratio = "16:9"
+            else:
+                ratio = "1:1"
+            
+            result = await aliyun_service.generate(
+                prompt=prompt,
+                duration=int(duration) if duration else 5,
+                resolution="720P",
+                ratio=ratio,
+                prompt_extend=True
+            )
+                
+                logger.info(f"✅ Generated video from Aliyun: {result.url}")
+                
+                return MediaResult(
+                    media_type="video",
+                    url=result.url,
+                    duration=result.duration
+                )
+            
+            # Standard ComfyKit execution (RunningHub or Selfhost)
             kit = await self.core._get_or_create_comfykit()
             
             # Determine what to pass to ComfyKit based on source
