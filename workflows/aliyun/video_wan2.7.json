@@ -1,0 +1,10 @@
+{
+  "source": "aliyun",
+  "model": "wan2.7-t2v",
+  "description": "阿里云万相文生视频 - wan2.7-t2v模型（最新版）",
+  "parameters": {
+    "duration": 5,
+    "resolution": "720P",
+    "prompt_extend": true
+  }
+}
