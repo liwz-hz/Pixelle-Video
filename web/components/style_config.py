@@ -939,6 +939,8 @@ def render_style_config(pixelle_video):
         "tts_voice": selected_voice if tts_mode == "local" else
                      (selected_speaker if tts_mode == "qwen_tts" else None),
         "tts_speed": tts_speed if tts_mode == "local" else (qwen_speed if tts_mode == "qwen_tts" else None),
+        "temperature": qwen_temp if tts_mode == "qwen_tts" else None,
+        "instruct": qwen_instruct if tts_mode == "qwen_tts" else None,
         "tts_workflow": tts_workflow_key if tts_mode == "comfyui" else None,
         "ref_audio": str(ref_audio_path) if ref_audio_path else None,
         "frame_template": frame_template,

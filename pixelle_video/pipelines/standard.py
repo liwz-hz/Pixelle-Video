@@ -269,6 +269,8 @@ class StandardPipeline(LinearVideoPipeline):
             tts_workflow=final_tts_workflow,
             tts_speed=ctx.params.get("tts_speed", 1.2),
             ref_audio=ctx.params.get("ref_audio"),
+            temperature=ctx.params.get("temperature", 0.5),
+            instruct=ctx.params.get("instruct"),
             media_width=ctx.params.get("media_width"),
             media_height=ctx.params.get("media_height"),
             media_workflow=ctx.params.get("media_workflow"),

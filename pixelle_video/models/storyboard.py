@@ -45,6 +45,8 @@ class StoryboardConfig:
     tts_workflow: Optional[str] = None         # TTS workflow filename (for ComfyUI mode, None = use default)
     tts_speed: Optional[float] = None          # TTS speed multiplier (0.5-2.0, 1.0 = normal)
     ref_audio: Optional[str] = None            # Reference audio for voice cloning (ComfyUI mode only)
+    temperature: Optional[float] = None        # Qwen-TTS temperature (0.5-1.5, lower=stable, higher=varied)
+    instruct: Optional[str] = None             # Qwen-TTS style/emotion instruction
     
     # Media workflow
     media_workflow: Optional[str] = None       # Media workflow filename (image or video, None = use default)

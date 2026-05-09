@@ -55,6 +55,8 @@ def render_single_output(pixelle_video, video_params):
     selected_voice = video_params.get("tts_voice")
     tts_speed = video_params.get("tts_speed")
     tts_workflow_key = video_params.get("tts_workflow")
+    temperature = video_params.get("temperature")
+    instruct = video_params.get("instruct")
     ref_audio_path = video_params.get("ref_audio")
     
     frame_template = video_params.get("frame_template")
@@ -149,6 +151,10 @@ def render_single_output(pixelle_video, video_params):
                 elif tts_mode == "qwen_tts":
                     video_params["tts_voice"] = selected_voice or "vivian"
                     video_params["tts_speed"] = tts_speed
+                    if temperature is not None:
+                        video_params["temperature"] = temperature
+                    if instruct:
+                        video_params["instruct"] = instruct
                 else:  # comfyui
                     video_params["tts_workflow"] = tts_workflow_key
                     if ref_audio_path:
