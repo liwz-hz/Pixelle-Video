@@ -235,7 +235,7 @@ class TTSService(ComfyBaseService):
             output_path = f"output/{unique_id}.wav"
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
 
-        python_bin = self._find_conda_python(conda_env)
+        python_bin = self._find_env_python(conda_env)
 
         runner_path = str(Path(__file__).parent / "qwen_tts_runner.py")
         if not os.path.isfile(runner_path):
@@ -276,38 +276,24 @@ class TTSService(ComfyBaseService):
         return result_path
 
     @staticmethod
-    def _find_conda_python(conda_env: str) -> str:
+    def _find_env_python(conda_env: str) -> str:
         conda_bin = shutil.which("conda")
         if not conda_bin:
-            search_paths = [
+            for p in [
                 "/opt/homebrew/Caskroom/miniconda/base/bin/conda",
                 os.path.expanduser("~/miniconda3/bin/conda"),
                 os.path.expanduser("~/anaconda3/bin/conda"),
                 "/opt/miniconda3/bin/conda",
-            ]
-            for p in search_paths:
+            ]:
                 if os.path.isfile(p):
                     conda_bin = p
                     break
         if not conda_bin:
-            raise RuntimeError("conda not found, please set PATH or configure qwen_tts.conda_python")
-
-        try:
-            result = subprocess.run(
-                [conda_bin, "run", "-n", conda_env, "which", "python"],
-                capture_output=True, text=True, timeout=10,
-            )
-            python_path = result.stdout.strip()
-            if python_path and os.path.isfile(python_path):
-                return python_path
-        except Exception:
-            pass
-
-        # Fallback: known common paths for the conda env
-        env_python = f"/opt/homebrew/Caskroom/miniconda/base/envs/{conda_env}/bin/python"
-        if os.path.isfile(env_python):
-            return env_python
-        return f"{Path(conda_bin).parent.parent}/envs/{conda_env}/bin/python"
+            raise RuntimeError("conda not found")
+        env_python = str(Path(conda_bin).parent.parent / "envs" / conda_env / "bin" / "python")
+        if not os.path.isfile(env_python):
+            raise RuntimeError(f"conda env python not found: {env_python}")
+        return env_python
 
     async def _call_comfyui_workflow(
         self,
