@@ -21,12 +21,6 @@ from typing import Dict, Any, List
 
 LLM_PRESETS: List[Dict[str, Any]] = [
     {
-        "name": "Qwen",
-        "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        "model": "qwen-max",
-        "api_key_url": "https://bailian.console.aliyun.com/?tab=model#/api-key",
-    },
-    {
         "name": "OpenAI",
         "base_url": "https://api.openai.com/v1",
         "model": "gpt-4o",
