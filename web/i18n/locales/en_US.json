@@ -224,6 +224,7 @@
     "tts.mode.local_hint": "💡 Using Edge TTS, no configuration required, ready to use",
     "tts.mode.comfyui_hint": "⚙️ Using ComfyUI workflows, flexible and powerful",
     "tts.mode.qwen_tts_hint": "🤖 Using local Qwen-TTS model, better quality, no network required",
+    "tts.voice_selector": "Voice Selection",
     "tts.speaker_selector": "Speaker Selection",
     "tts.speed": "Speed",
     "tts.speed_label": "{speed}x",

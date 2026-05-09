@@ -58,6 +58,11 @@ def fetch_available_models(api_key: str, base_url: str, timeout: float = 10.0) -
     
     with httpx.Client(timeout=timeout) as client:
         response = client.get(models_url, headers=headers)
+        
+        if response.status_code == 404:
+            logger.warning(f"Model listing not supported by this API (404): {models_url}")
+            return []
+        
         response.raise_for_status()
         
         data = response.json()

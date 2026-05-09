@@ -297,9 +297,17 @@ class TTSService(ComfyBaseService):
                 [conda_bin, "run", "-n", conda_env, "which", "python"],
                 capture_output=True, text=True, timeout=10,
             )
-            return result.stdout.strip()
+            python_path = result.stdout.strip()
+            if python_path and os.path.isfile(python_path):
+                return python_path
         except Exception:
-            return f"{Path(conda_bin).parent.parent}/envs/{conda_env}/bin/python"
+            pass
+
+        # Fallback: known common paths for the conda env
+        env_python = f"/opt/homebrew/Caskroom/miniconda/base/envs/{conda_env}/bin/python"
+        if os.path.isfile(env_python):
+            return env_python
+        return f"{Path(conda_bin).parent.parent}/envs/{conda_env}/bin/python"
 
     async def _call_comfyui_workflow(
         self,
