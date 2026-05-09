@@ -82,6 +82,7 @@ def _find_model_path(model_type: str, quant: str = "bf16", size: str = "1.7B") -
 
 def main():
     from mlx_audio.tts.utils import load_model
+    import mlx.core as mx
     
     t0 = time.time()
     
@@ -95,6 +96,10 @@ def main():
     quant = params.get("quant", "bf16")
     speed = params.get("speed", 1.0)
     temperature = params.get("temperature", 0.9)
+    seed = params.get("seed")
+    
+    if seed is not None:
+        mx.random.seed(seed)
     
     if not text or not text.strip():
         print("ERROR: text is empty", file=sys.stderr)
@@ -126,6 +131,8 @@ def main():
         language=language,
         instruct=instruct if instruct else None,
         temperature=temperature,
+        top_k=20,
+        top_p=0.9,
     ))
     
     result = results[0]

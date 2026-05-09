@@ -250,6 +250,7 @@ class TTSService(ComfyBaseService):
             "quant": quant,
             "speed": final_speed,
             "temperature": final_temp,
+            "seed": 42,
         })
 
         logger.info(f"🎙️  Using Qwen-TTS MLX: speaker={speaker}, lang={language}, quant={quant}")
