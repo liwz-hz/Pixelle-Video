@@ -246,6 +246,10 @@ class StandardPipeline(LinearVideoPipeline):
             elif tts_inference_mode == "comfyui":
                 final_voice_id = None
                 logger.debug(f"TTS Mode: comfyui (workflow={final_tts_workflow})")
+            elif tts_inference_mode == "qwen_tts":
+                final_voice_id = tts_voice or "vivian"
+                final_tts_workflow = None
+                logger.debug(f"TTS Mode: qwen_tts (voice={final_voice_id})")
         else:
             # Old API
             final_voice_id = voice_id or tts_voice or "zh-CN-YunjianNeural"
