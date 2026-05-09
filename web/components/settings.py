@@ -291,45 +291,6 @@ def render_advanced_settings():
                     runninghub_48g_enabled = runninghub_instance_type_display == tr("settings.comfyui.runninghub_instance_48g")
         
         # ====================================================================
-        # Aliyun Video Generation Settings (New Row)
-        # ====================================================================
-        st.markdown("---")
-        
-        with st.container(border=True):
-            st.markdown(f"**{tr('settings.aliyun.title')}**")
-            st.caption(tr("settings.aliyun.hint"))
-            
-            # Get current Aliyun config
-            aliyun_config = config_manager.get_config().get("aliyun", {})
-            
-            aliyun_col1, aliyun_col2 = st.columns([2, 1])
-            
-            with aliyun_col1:
-                aliyun_api_key = st.text_input(
-                    f"{tr('settings.aliyun.api_key')} *",
-                    value=aliyun_config.get("api_key", ""),
-                    type="password",
-                    help=tr("settings.aliyun.api_key_help"),
-                    key="aliyun_api_key_input"
-                )
-                
-                # API Key link
-                st.markdown(
-                    f"🔑 [{tr('settings.aliyun.get_api_key')}]"
-                    f"(https://dashscope.console.aliyun.com/apiKey)"
-                )
-            
-            with aliyun_col2:
-                aliyun_model = st.selectbox(
-                    tr("settings.aliyun.model"),
-                    options=["wan2.7-t2v", "wan2.6-t2v", "wan2.6-i2v"],
-                    index=0 if aliyun_config.get("model", "wan2.7-t2v") == "wan2.7-t2v" else
-                          (1 if aliyun_config.get("model") == "wan2.6-t2v" else 2),
-                    help=tr("settings.aliyun.model_help"),
-                    key="aliyun_model_select"
-                )
-        
-        # ====================================================================
         # Action Buttons (full width at bottom)
         # ====================================================================
         st.markdown("---")
@@ -351,12 +312,6 @@ def render_advanced_settings():
                         runninghub_concurrent_limit=int(runninghub_concurrent_limit),
                         runninghub_instance_type=instance_type
                     )
-                    
-                    if aliyun_api_key and aliyun_model:
-                        config_manager.set_aliyun_config(
-                            api_key=aliyun_api_key,
-                            model=aliyun_model
-                        )
                     
                     if llm_api_key and llm_base_url and llm_model:
                         config_manager.save()

@@ -27,7 +27,6 @@ from pixelle_video.config import config_manager
 from pixelle_video.services.llm_service import LLMService
 from pixelle_video.services.tts_service import TTSService
 from pixelle_video.services.media import MediaService
-from pixelle_video.services.aliyun_video import AliyunVideoService
 from pixelle_video.services.image_analysis import ImageAnalysisService
 from pixelle_video.services.video_analysis import VideoAnalysisService
 from pixelle_video.services.video import VideoService
@@ -86,10 +85,7 @@ class PixelleVideoCore:
         # ComfyKit lazy initialization (created on first use, recreated on config change)
         self._comfykit: Optional[ComfyKit] = None
         self._comfykit_config_hash: Optional[str] = None
-        
-        # Aliyun video service (for direct API calls)
-        self._aliyun_video: Optional[AliyunVideoService] = None
-        
+
         # Core services (initialized in initialize())
         self.llm: Optional[LLMService] = None
         self.tts: Optional[TTSService] = None
@@ -200,18 +196,7 @@ class PixelleVideoCore:
         # Initialize services
         self.llm = LLMService(self.config)
         self.tts = TTSService(self.config, core=self)
-        
-        # Initialize Aliyun video service if configured
-        aliyun_config = self.config.get("aliyun", {})
-        if aliyun_config.get("api_key"):
-            self._aliyun_video = AliyunVideoService(
-                api_key=aliyun_config["api_key"],
-                model=aliyun_config.get("model", "wan2.6-t2v"),
-                timeout=aliyun_config.get("timeout", 600),
-                max_wait_attempts=aliyun_config.get("max_wait_attempts", 60)
-            )
-            logger.info(f"✅ Aliyun video service initialized (model: {aliyun_config.get('model', 'wan2.6-t2v')})")
-        
+
         self.media = MediaService(self.config, core=self)
         self.image = self.media  # Alias for backward compatibility
         self.image_analysis = ImageAnalysisService(self.config, core=self)
@@ -234,16 +219,7 @@ class PixelleVideoCore:
         
         self._initialized = True
         logger.info("✅ Pixelle-Video initialized successfully\n")
-    
-    def get_aliyun_video_service(self) -> Optional[AliyunVideoService]:
-        """
-        Get Aliyun video service instance
-        
-        Returns:
-            AliyunVideoService instance or None if not configured
-        """
-        return self._aliyun_video
-    
+
     async def cleanup(self):
         """
         Cleanup resources (close ComfyKit session)
