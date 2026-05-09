@@ -29,7 +29,7 @@ uv run streamlit run web/app.py
 
 首次使用时，展开「⚙️ 系统配置」面板，确认已配置：
 
-- **LLM 配置**: 选择 AI 模型（如通义千问、GPT 等）并填入 API Key
+- **LLM 配置**: 选择 AI 模型（如 GPT、DeepSeek 等）并填入 API Key
 - **图像配置**: 配置 ComfyUI 地址或 RunningHub API Key
 
 如果还没有配置，请查看 [配置说明](configuration.md)。

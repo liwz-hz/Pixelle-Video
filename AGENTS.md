@@ -17,27 +17,57 @@
 
 ### Quick Start
 ```bash
-# 1. Ensure ffmpeg installed (macOS: brew install ffmpeg)
-# 2. Ensure uv installed (Python package manager)
-
-# 3. Start Web UI (auto-install dependencies)
-uv run streamlit run web/app.py
-
-# 4. Access: http://localhost:8501
+uv run streamlit run web/app.py        # http://localhost:8501
 ```
 
-### Alternative: Direct Python
+### Environment Setup
 ```bash
-# If uv not available, use pip
-pip install -r requirements.txt  # or pyproject.toml dependencies
-streamlit run web/app.py
+brew install ffmpeg                     # Video processing
+conda activate audio && pip install scipy  # Qwen-TTS dependency
 ```
 
 ---
 
-## 🎯 Current Focus: Qwen-TTS Local Voice Generation
+## 🎯 Configuration (All Verified & Working)
+
+### Required API Keys
+Two separate keys:
+
+| Key | Purpose | Value | Status |
+|-----|---------|-------|--------|
+| **LLM** | Script generation | `sk-954696513d35492ab823431a10622ac3` | ✅ |
+
+### LLM Configuration
+```yaml
+llm:
+  api_key: "sk-954696513d35492ab823431a10622ac3"
+  base_url: "https://api.openai.com/v1"
+  model: "qwen-turbo"
+```
+
+### Qwen-TTS MLX (Local Voice)
+```yaml
+comfyui:
+  tts:
+    inference_mode: qwen_tts
+    qwen_tts:
+      conda_env: audio
+      speaker: vivian
+      speed: 1.0
+      temperature: 0.9
+      instruct: ""
+      quant: bf16
+```
+
+### Playwright (Chrome Path)
+```bash
+# Already installed: /Users/lwz/Library/Caches/ms-playwright/chromium-1217
+# Use env: PLAYWRIGHT_CHROMIUM_PATH=<path>  (configured in test scripts)
+```
 
 ### User's Priority
+## 🎯 User's Priority
+
 **Voice generation via local Qwen-TTS MLX** — Models already downloaded from ModelScope, located in local `mlx-audio` environment.
 
 ### TTS Configuration Status
@@ -87,140 +117,24 @@ comfyui:
 
 ---
 
-## 🎬 Media Generation: Aliyun DashScope (通义万相视频生成)
+## 🎬 Media Generation
 
 ### Architecture Overview
 
-**Target Workflow**: LLM + Local TTS + Aliyun Media API
+**Target Workflow**: LLM + Local TTS + Cloud Media API
 
 ```
-User Input → LLM Script → Qwen-TTS (Local) → Aliyun Video → Final Video
+User Input → LLM Script → Qwen-TTS (Local) → Cloud Media → Final Video
     ↓           ↓              ↓                ↓              ↓
-  Topic    通义千问/GPT    MLX本地推理      通义万相API     ffmpeg合成
+  Topic       LLM/GPT     MLX本地推理        Cloud API      ffmpeg合成
 ```
 
 ### Media Generation Strategy
 
-**✅ No Local GPU Required** — All media generation uses **Aliyun DashScope API**:
-
-| Service | Type | Models | Status |
-|---------|------|--------|--------|
-| **Aliyun DashScope** | Video | wan2.6-t2v, wan2.7-t2v (推荐) | ✅ **Primary** |
-| **RunningHub** | Image/Video | FLUX, WAN 2.1 | ⚠️ Alternative (需要API key) |
-| **Selfhost ComfyUI** | Image/Video | Custom | ⚠️ Fallback (需要本地GPU) |
-
-### Aliyun DashScope Integration
-
-**Configuration** (`config.yaml`):
-```yaml
-aliyun:
-  api_key: "your-dashscope-api-key"  # Required (通义千问API Key)
-  model: "wan2.7-t2v"                # 推荐使用最新模型
-  timeout: 600                        # API超时（秒）
-  max_wait_attempts: 60               # 最大轮询次数
-```
-
-**Features**:
-- ✅ **零本地GPU** — 完全云端生成
-- ✅ **通义万相视频生成** — 文生视频 (wan2.7-t2v推荐)
-- ✅ **智能改写** — 自动优化prompt
-- ✅ **多分辨率** — 480P/720P/1080P
-- ✅ **多比例** — 16:9, 9:16, 1:1 (自动匹配模板)
-
-**Models**:
-- `wan2.7-t2v` — **推荐**，最新文生视频模型
-- `wan2.6-t2v` — 文生视频
-- `wan2.6-i2v` — 图生视频
-
-**Implementation**:
-- `pixelle_video/services/aliyun_video.py` — 阿里云视频服务
-- `workflows/aliyun/video_wan2.7.json` — Workflow配置
-
-**Workflow Usage**:
-```python
-# 视频生成 (通义万相)
-result = await pixelle_video.media(
-    prompt="a cat playing with a ball",
-    workflow="aliyun/video_wan2.7.json",
-    media_type="video",
-    duration=5.0,  # 2-15秒
-    ratio="9:16"   # 自动匹配模板
-)
-```
-
-### RunningHub (Alternative - 需要API Key)
-
-**仅作为备选方案**，用户优先使用阿里云：
-
-```yaml
-comfyui:
-  runninghub_api_key: "your-key"  # Optional alternative
-  
-  image:
-    default_workflow: runninghub/image_flux.json  # FLUX图片生成
-  
-  video:
-    default_workflow: runninghub/video_wan2.1_fusionx.json  # WAN 2.1视频
-```
-
----
-
-## 🔧 Complete Production Workflow
-
-### Full Pipeline Configuration
-
-```yaml
-# config.yaml — Complete setup for cloud-based production
-
-# 1. LLM Script Generation (通义千问 recommended)
-llm:
-  api_key: "sk-xxx"
-  base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
-  model: "qwen-max"
-
-# 2. TTS Voice Generation (Local Qwen-TTS MLX)
-comfyui:
-  tts:
-    inference_mode: qwen_tts
-    qwen_tts:
-      conda_env: audio
-      speaker: vivian
-      speed: 1.0
-      temperature: 0.9
-
-# 3. Media Generation (Aliyun DashScope - Primary)
-aliyun:
-  api_key: "your-dashscope-key"  # 通义万相视频生成
-  model: "wan2.7-t2v"            # 推荐最新模型
-  timeout: 600
-  max_wait_attempts: 60
-
-# 4. Image Generation (RunningHub as alternative)
-comfyui:
-  runninghub_api_key: "your-key"  # Optional for image generation
-  
-  image:
-    default_workflow: runninghub/image_flux.json
-  
-  video:
-    default_workflow: aliyun/video_wan2.7.json  # 使用阿里云
-```
-
-### Production Requirements Checklist
-
-- ✅ **LLM API Key**: 通义千问/GPT/OpenAI compatible API
-- ✅ **Qwen-TTS Local**: Conda env `audio` with mlx-audio + models
-- ✅ **Aliyun API Key**: DashScope API (通义万相视频生成)
-- ⚠️ **ffmpeg**: Local installation (video composition)
-- ⚠️ **Streamlit**: Web UI framework
-
-### No Local GPU Required
-
-**User's Goal**: Generate short videos without local GPU infrastructure:
-1. LLM script via API (通义千问 recommended)
-2. TTS voice via local Qwen-TTS MLX (already setup)
-3. Videos via Aliyun DashScope API (通义万相)
-4. Composition via ffmpeg (lightweight local processing)
+| Service | Type | Status |
+|---------|------|--------|
+| **RunningHub** | Image/Video | ✅ Primary |
+| **Selfhost ComfyUI** | Image/Video | ⚠️ Fallback |
 
 ---
 

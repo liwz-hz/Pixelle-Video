@@ -9,7 +9,7 @@ Detailed explanation of the `config.yaml` configuration file.
 ```yaml
 llm:
   api_key: "your-api-key"
-  base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+  base_url: "https://api.openai.com/v1"
   model: "qwen-plus"
 
 comfyui:

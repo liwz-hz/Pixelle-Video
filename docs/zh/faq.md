@@ -36,7 +36,6 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ### Q: 支持哪些 LLM？
 
 支持所有 OpenAI 兼容接口的 LLM，包括：
-- 通义千问
 - GPT-4o
 - DeepSeek
 - Ollama（本地）
@@ -60,7 +59,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ### Q: 费用大概多少？
 
 - **完全免费**: Ollama + 本地 ComfyUI = 0 元
-- **推荐方案**: 通义千问 + 本地 ComfyUI ≈ 0.01-0.05 元/视频
+- **推荐方案**: GPT/OpenAI-compatible API + 本地 ComfyUI ≈ 0.01-0.05 元/视频
 - **云端方案**: OpenAI + RunningHub（费用较高）
 
 ---

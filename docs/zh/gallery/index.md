@@ -11,7 +11,7 @@
     ---
 
     <video controls width="100%" style="border-radius: 8px;">
-      <source src="https://your-oss-bucket.oss-cn-hangzhou.aliyuncs.com/pixelle-video/reading-habit/video.mp4" type="video/mp4">
+      <source src="https://example.com/videos/reading-habit.mp4" type="video/mp4">
     </video>
     
     [:octicons-mark-github-16: 查看工作流和配置](https://github.com/AIDC-AI/Pixelle-Video/tree/main/docs/gallery/reading-habit)
@@ -21,7 +21,7 @@
     ---
 
     <video controls width="100%" style="border-radius: 8px;">
-      <source src="https://your-oss-bucket.oss-cn-hangzhou.aliyuncs.com/pixelle-video/work-efficiency/video.mp4" type="video/mp4">
+      <source src="https://example.com/videos/work-efficiency.mp4" type="video/mp4">
     </video>
     
     [:octicons-mark-github-16: 查看工作流和配置](https://github.com/AIDC-AI/Pixelle-Video/tree/main/docs/gallery/work-efficiency)
@@ -31,7 +31,7 @@
     ---
 
     <video controls width="100%" style="border-radius: 8px;">
-      <source src="https://your-oss-bucket.oss-cn-hangzhou.aliyuncs.com/pixelle-video/healthy-diet/video.mp4" type="video/mp4">
+      <source src="https://example.com/videos/healthy-diet.mp4" type="video/mp4">
     </video>
     
     [:octicons-mark-github-16: 查看工作流和配置](https://github.com/AIDC-AI/Pixelle-Video/tree/main/docs/gallery/healthy-diet)

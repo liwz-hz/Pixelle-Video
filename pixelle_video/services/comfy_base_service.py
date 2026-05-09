@@ -161,7 +161,7 @@ class ComfyBaseService:
             "key": f"{source}/{file_path.name}"
         }
         
-        # Check if it's a wrapper format (RunningHub, Aliyun, etc.)
+        # Check if it's a wrapper format (RunningHub, etc.)
         if "source" in content:
             # Wrapper format: {"source": "runninghub", "workflow_id": "xxx", ...}
             if "workflow_id" in content:
