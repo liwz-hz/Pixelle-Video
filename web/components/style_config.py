@@ -99,13 +99,13 @@ def render_style_config(pixelle_video):
             
             qwen_temp = st.slider(
                 "温度（Temperature）",
-                min_value=0.5,
+                min_value=0.1,
                 max_value=1.5,
                 value=saved_temp,
                 step=0.05,
                 format="%.2f",
                 key="qwen_tts_temperature",
-                help="控制语音的自然度和变化性。越低越稳定一致，越高越有变化。"
+                help="控制语音的自然度和变化性。越低越稳定一致，越高越有变化。推荐 0.3 获得一致音色。"
             )
             
             qwen_instruct = st.text_input(
