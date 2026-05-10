@@ -5,15 +5,14 @@ Qwen-TTS Server - Keeps model in memory for consistent voice generation
 Usage:
     python pixelle_video/services/qwen_tts_server.py --port 9876
 
-Client connects via TCP, sends JSON request, receives audio file path.
+Uses async server with model loaded in main thread (MLX requirement).
 """
 
 import argparse
+import asyncio
 import json
 import os
-import socket
 import sys
-import threading
 import time
 from pathlib import Path
 
@@ -29,6 +28,8 @@ VALID_SPEAKERS = [
 
 _model = None
 _model_path = None
+_request_queue = asyncio.Queue()
+_result_queues = {}
 
 
 def _find_model_path(model_type: str = "custom_voice", quant: str = "bf16", size: str = "1.7B") -> str | None:
@@ -55,7 +56,6 @@ def load_model_once(quant: str = "bf16"):
         return _model
     
     from mlx_audio.tts.utils import load_model
-    import mlx.core as mx
     
     _model_path = _find_model_path("custom_voice", quant=quant)
     if not _model_path:
@@ -70,7 +70,7 @@ def load_model_once(quant: str = "bf16"):
     return _model
 
 
-def generate_audio(params: dict) -> dict:
+def generate_audio_sync(params: dict) -> dict:
     import mlx.core as mx
     
     text = params["text"]
@@ -133,35 +133,54 @@ def generate_audio(params: dict) -> dict:
     }
 
 
-def handle_client(conn: socket.socket, addr):
+async def handle_client(reader, writer):
     try:
-        data = b""
-        while True:
-            chunk = conn.recv(4096)
-            if not chunk:
-                break
-            data += chunk
-            if b"\n" in data:
-                break
+        data = await reader.read(65536)
+        if not data:
+            return
         
         request_str = data.decode().strip()
         if not request_str:
             return
         
         params = json.loads(request_str)
-        result = generate_audio(params)
+        request_id = id(writer)
+        result_queue = asyncio.Queue()
+        _result_queues[request_id] = result_queue
+        
+        await _request_queue.put((params, request_id))
+        
+        result = await result_queue.get()
+        
+        del _result_queues[request_id]
         
         response = json.dumps(result) + "\n"
-        conn.sendall(response.encode())
+        writer.write(response.encode())
+        await writer.drain()
         
     except Exception as e:
         error_response = json.dumps({"error": str(e)}) + "\n"
-        conn.sendall(error_response.encode())
+        writer.write(error_response.encode())
+        await writer.drain()
     finally:
-        conn.close()
+        writer.close()
+        await writer.wait_closed()
 
 
-def main():
+async def process_requests():
+    while True:
+        params, request_id = await _request_queue.get()
+        
+        try:
+            result = generate_audio_sync(params)
+        except Exception as e:
+            result = {"error": str(e)}
+        
+        if request_id in _result_queues:
+            await _result_queues[request_id].put(result)
+
+
+async def main():
     parser = argparse.ArgumentParser(description="Qwen-TTS Server")
     parser.add_argument("--port", type=int, default=9876, help="Server port")
     parser.add_argument("--quant", type=str, default="bf16", help="Model quantization")
@@ -169,26 +188,19 @@ def main():
     
     print(f"[Server] Starting Qwen-TTS server on port {args.port}", file=sys.stderr)
     
-    model = load_model_once(args.quant)
+    load_model_once(args.quant)
     
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server.bind(("127.0.0.1", args.port))
-    server.listen(5)
+    asyncio.create_task(process_requests())
+    
+    server = await asyncio.start_server(
+        handle_client, '127.0.0.1', args.port
+    )
     
     print(f"[Server] Ready to accept connections", file=sys.stderr)
     
-    try:
-        while True:
-            conn, addr = server.accept()
-            thread = threading.Thread(target=handle_client, args=(conn, addr))
-            thread.daemon = True
-            thread.start()
-    except KeyboardInterrupt:
-        print("\n[Server] Shutting down...", file=sys.stderr)
-    finally:
-        server.close()
+    async with server:
+        await server.serve_forever()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
