@@ -34,7 +34,7 @@ class QwenTTSConfig(BaseModel):
     instruct: str = Field(default="", description="Default style/emotion instruction (empty = no instruction)")
     quant: str = Field(default="bf16", description="Model quantization variant")
     speed: float = Field(default=1.0, ge=0.5, le=2.0, description="Speech speed multiplier")
-    temperature: float = Field(default=0.9, ge=0.5, le=1.5, description="Sampling temperature for generation")
+    temperature: float = Field(default=0.9, ge=0.1, le=1.5, description="Sampling temperature (lower=stable)")
 
 
 
