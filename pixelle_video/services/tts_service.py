@@ -237,7 +237,7 @@ class TTSService(ComfyBaseService):
         instruct = instruct or qwen_config.get("instruct", "")
         quant = qwen_config.get("quant", "bf16")
         final_speed = speed if speed is not None else qwen_config.get("speed", 1.0)
-        final_temp = temperature if temperature is not None else qwen_config.get("temperature", 0.5)
+        final_temp = temperature if temperature is not None else qwen_config.get("temperature", 0.9)
 
         if speaker not in QWEN_TTS_VALID_SPEAKERS:
             raise ValueError(f"Invalid speaker '{speaker}', must be one of {QWEN_TTS_VALID_SPEAKERS}")

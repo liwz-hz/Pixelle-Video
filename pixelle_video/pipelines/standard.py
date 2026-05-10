@@ -48,6 +48,7 @@ from pixelle_video.utils.os_util import (
 from pixelle_video.utils.template_util import get_template_type
 from pixelle_video.utils.prompt_helper import build_image_prompt
 from pixelle_video.services.video import VideoService
+from pixelle_video.config import config_manager
 
 
 
@@ -267,9 +268,9 @@ class StandardPipeline(LinearVideoPipeline):
             tts_inference_mode=tts_inference_mode or "local",
             voice_id=final_voice_id,
             tts_workflow=final_tts_workflow,
-            tts_speed=ctx.params.get("tts_speed", 1.2),
+            tts_speed=ctx.params.get("tts_speed") or config_manager.get_comfyui_config()["tts"]["qwen_tts"].get("speed", 1.0),
             ref_audio=ctx.params.get("ref_audio"),
-            temperature=ctx.params.get("temperature", 0.5),
+            temperature=ctx.params.get("temperature") or config_manager.get_comfyui_config()["tts"]["qwen_tts"].get("temperature", 0.9),
             instruct=ctx.params.get("instruct"),
             media_width=ctx.params.get("media_width"),
             media_height=ctx.params.get("media_height"),
