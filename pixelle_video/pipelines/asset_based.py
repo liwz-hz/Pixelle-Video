@@ -582,8 +582,11 @@ class AssetBasedPipeline(LinearVideoPipeline):
                 await self.core.tts(
                     text=narration_text,
                     output_path=str(audio_path),
+                    inference_mode=config.tts_inference_mode,
                     voice=config.voice_id,
-                    speed=config.tts_speed
+                    speed=config.tts_speed,
+                    temperature=getattr(config, "temperature", None),
+                    instruct=getattr(config, "instruct", None)
                 )
                 
                 narration_audios.append(str(audio_path))
