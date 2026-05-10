@@ -133,7 +133,11 @@ class ConfigManager:
             "runninghub_concurrent_limit": self.config.comfyui.runninghub_concurrent_limit,
             "runninghub_instance_type": self.config.comfyui.runninghub_instance_type,
             "tts": {
+                "inference_mode": self.config.comfyui.tts.inference_mode,
                 "default_workflow": self.config.comfyui.tts.default_workflow,
+                "local": self.config.comfyui.tts.local.model_dump(),
+                "comfyui": self.config.comfyui.tts.comfyui.model_dump(),
+                "qwen_tts": self.config.comfyui.tts.qwen_tts.model_dump(),
             },
             "image": {
                 "default_workflow": self.config.comfyui.image.default_workflow,
@@ -144,4 +148,3 @@ class ConfigManager:
                 "prompt_prefix": self.config.comfyui.video.prompt_prefix,
             }
         }
-
