@@ -43,87 +43,23 @@ def render_style_config(pixelle_video):
         comfyui_config = config_manager.get_comfyui_config()
         tts_config = comfyui_config["tts"]
         
-        # Inference mode selection
+        # Inference mode selection (only qwen_tts and comfyui)
         tts_mode = st.radio(
             tr("tts.inference_mode"),
-            ["local", "qwen_tts", "comfyui"],
+            ["qwen_tts", "comfyui"],
             horizontal=True,
             format_func=lambda x: tr(f"tts.mode.{x}"),
-            index=0 if tts_config.get("inference_mode", "local") == "local" else
-                  (1 if tts_config.get("inference_mode", "local") == "qwen_tts" else 2),
+            index=0 if tts_config.get("inference_mode", "qwen_tts") == "qwen_tts" else 1,
             key="tts_inference_mode"
         )
         
         # Show hint based on mode
-        if tts_mode == "local":
-            st.caption(tr("tts.mode.local_hint"))
-        else:
-            st.caption(tr("tts.mode.comfyui_hint"))
-        
-        # ================================================================
-        # Local Mode UI
-        # ================================================================
-        if tts_mode == "local":
-            # Import voice configuration
-            from pixelle_video.tts_voices import EDGE_TTS_VOICES, get_voice_display_name
-            
-            # Get saved voice from config
-            local_config = tts_config.get("local", {})
-            saved_voice = local_config.get("voice", "zh-CN-YunjianNeural")
-            saved_speed = local_config.get("speed", 1.2)
-            
-            # Build voice options with i18n
-            voice_options = []
-            voice_ids = []
-            default_voice_index = 0
-            
-            for idx, voice_config in enumerate(EDGE_TTS_VOICES):
-                voice_id = voice_config["id"]
-                display_name = get_voice_display_name(voice_id, tr, get_language())
-                voice_options.append(display_name)
-                voice_ids.append(voice_id)
-                
-                # Set default index if matches saved voice
-                if voice_id == saved_voice:
-                    default_voice_index = idx
-            
-            # Two-column layout: Voice | Speed
-            voice_col, speed_col = st.columns([1, 1])
-            
-            with voice_col:
-                # Voice selector
-                selected_voice_display = st.selectbox(
-                    tr("tts.voice_selector"),
-                    voice_options,
-                    index=default_voice_index,
-                    key="tts_local_voice"
-                )
-                
-                # Get actual voice ID
-                selected_voice_index = voice_options.index(selected_voice_display)
-                selected_voice = voice_ids[selected_voice_index]
-            
-            with speed_col:
-                # Speed slider
-                tts_speed = st.slider(
-                    tr("tts.speed"),
-                    min_value=0.5,
-                    max_value=2.0,
-                    value=saved_speed,
-                    step=0.1,
-                    format="%.1fx",
-                    key="tts_local_speed"
-                )
-                st.caption(tr("tts.speed_label", speed=f"{tts_speed:.1f}"))
-            
-            # Variables for video generation
-            tts_workflow_key = None
-            ref_audio_path = None
+        st.caption(tr("tts.mode.comfyui_hint"))
         
         # ================================================================
         # Qwen-TTS Mode UI
         # ================================================================
-        elif tts_mode == "qwen_tts":
+        if tts_mode == "qwen_tts":
             st.caption(tr("tts.mode.qwen_tts_hint"))
             
             from pixelle_video.tts_voices import QWEN_TTS_SPEAKERS
@@ -240,10 +176,10 @@ def render_style_config(pixelle_video):
                 ref_audio_path = temp_dir / f"ref_audio_{ref_audio_file.name}"
                 with open(ref_audio_path, "wb") as f:
                     f.write(ref_audio_file.getbuffer())
-            
+             
             # Variables for video generation
-            selected_voice = None
-            tts_speed = None
+            tts_workflow_key = None
+            ref_audio_path = None
         
         # ================================================================
         # TTS Preview (works for both modes)
@@ -267,10 +203,7 @@ def render_style_config(pixelle_video):
                             "inference_mode": tts_mode
                         }
                         
-                        if tts_mode == "local":
-                            tts_params["voice"] = selected_voice
-                            tts_params["speed"] = tts_speed
-                        elif tts_mode == "qwen_tts":
+                        if tts_mode == "qwen_tts":
                             tts_params["voice"] = selected_speaker
                             tts_params["speed"] = qwen_speed
                             if qwen_instruct:
@@ -936,9 +869,8 @@ def render_style_config(pixelle_video):
     # Return all style configuration parameters
     return {
         "tts_inference_mode": tts_mode,
-        "tts_voice": selected_voice if tts_mode == "local" else
-                     (selected_speaker if tts_mode == "qwen_tts" else None),
-        "tts_speed": tts_speed if tts_mode == "local" else (qwen_speed if tts_mode == "qwen_tts" else None),
+        "tts_voice": selected_speaker if tts_mode == "qwen_tts" else None,
+        "tts_speed": qwen_speed if tts_mode == "qwen_tts" else None,
         "temperature": qwen_temp if tts_mode == "qwen_tts" else None,
         "instruct": qwen_instruct if tts_mode == "qwen_tts" else None,
         "tts_workflow": tts_workflow_key if tts_mode == "comfyui" else None,
