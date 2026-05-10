@@ -302,11 +302,25 @@ def render_style_config(pixelle_video):
         }
         
         # Radio buttons in horizontal layout
+        template_config = pixelle_video.config.get("template", {})
+        config_default_template = template_config.get("default_template", "1080x1920/image_default.html")
+        
+        if config_default_template == "1080x1920/default.html":
+            config_default_template = "1080x1920/image_default.html"
+        
+        default_type = 'image'
+        if 'static' in config_default_template:
+            default_type = 'static'
+        elif 'video' in config_default_template:
+            default_type = 'video'
+        
+        default_index = list(template_type_options.keys()).index(default_type)
+        
         selected_template_type = st.radio(
             tr('template.type_selector'),
             options=list(template_type_options.keys()),
             format_func=lambda x: template_type_options[x],
-            index=1,  # Default to 'image'
+            index=default_index,
             key="template_type_selector",
             label_visibility="collapsed",
             horizontal=True
@@ -333,14 +347,6 @@ def render_style_config(pixelle_video):
             'landscape': tr('orientation.landscape'),
             'square': tr('orientation.square')
         }
-        
-        # Get default template from config
-        template_config = pixelle_video.config.get("template", {})
-        config_default_template = template_config.get("default_template", "1080x1920/image_default.html")
-
-        # Backward compatibility
-        if config_default_template == "1080x1920/default.html":
-            config_default_template = "1080x1920/image_default.html"
         
         # Determine type-specific default template
         type_default_templates = {
